@@ -111,7 +111,7 @@ def main():
     model = ResNet_Final(res_model, net)
     
     if config.Load_Model :
-        model.load_state_dict(torch.load(config.pth_FilePATH+fileName_to_load+".pth"))
+        model.load_state_dict(torch.load(config.pth_FilePATH+config.ModelName_to_load+".pth"))
 
     model = model.to(device)
     #-------------------------- Loss & Optimizer --------------------------
@@ -122,7 +122,11 @@ def main():
         model = nn.DataParallel(model).to(device)
         optimizer = optim.Adam(model.module.parameters(), lr=0.001)
 
-        lr_lambda = lambda x: 1 if x < 1000 else (x / 1000) ** -0.5
+        #1000에폭이 아니라 1000 step에서 바뀜 
+        #lr_lambda = lambda x: 1 if x < 1000 else (x / 1000) ** -0.5
+        
+        # 2에폭까지는 그대로 유지하기   (숫자를 곱하는 식인가봄..!)
+        lr_lambda = lambda x: 1 if x < 13542 else (x / 1000) ** -0.5 # 13542 = 6771 * 2
         scheduler = LambdaLR(optimizer, lr_lambda)
         
     else:
@@ -135,20 +139,28 @@ def main():
     #train dataset
     #자기 파일 path
     train_dataset = MS1MDataset(config.trainDataPATH , config.trainDataListPATH)
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=512, shuffle=True, num_workers=gpu_num * 4)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, config.batch_size, config.train_data_shuffle, num_workers=gpu_num * 4)
 
-    #test데이터 셋을 train 폴더에서 가져오므로 위치는 trainDataPATH!!!!!
-    test_dataset = MS1MDataset(config.trainDataPATH, config.testDataListPATH)
-    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=512, shuffle=False, num_workers=gpu_num * 4)
+    #test데이터 셋을 train 폴더에서 가져오므로 폴더 위치는 trainDataPATH!!!!!
+    test_dataset = MS1MDataset(config.trainDataPATH, config.testDataListPATH) # 폴더 위치 , 파일 리스트
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, config.batch_size, config.test_data_shuffle, num_workers=gpu_num * 4)
 
+
+    # ----------------------- 학습 시작 ----------------------------------
     print(" ")
     print("학습시작")
     print(" ")
 
+    # 현재 config 저장
+    config_log_PATH = config.configs_path+ "config_"+ config.trainName +".py"
+    shutil.copy("./config.py",config_log_PATH)
+
+
     pre_test_acc = 0
     pre_test_loss = 100000
     total_step = 0
-    for epoch in range(0, 10000):
+    for epoch in range(0, config.MaxEpoch):
+        
         print('{} 학습 시작'.format(datetime.datetime.now()))
         train_time = time.time()
         epoch_loss, epoch_acc = model_train(model, train_dataloader, optimizer, criterion, scheduler, total_step, device)

@@ -9,31 +9,31 @@ from torchvision import datasets, models, transforms
 
 from model import ResNet, IRBlock, ResNet_Final
 
+import config
+
 def cos_sim(a, b):
     return F.cosine_similarity(a, b)
 
 def infer():
     #초기화
-    seed_num = 123456
-    random.seed(seed_num)
-    torch.manual_seed(seed_num)
-    torch.cuda.manual_seed_all(seed_num)
+    random.seed(config.seed_num)
+    torch.manual_seed(config.seed_num)
+    torch.cuda.manual_seed_all(config.seed_num)
 
     cuda = torch.cuda.is_available()
 
     device = torch.device('cuda' if cuda else 'cpu')
 
     #model 정의
-    num_classes = 42711 
     res_model = ResNet(IRBlock, [3, 4, 6, 3], use_se=False, im_size=112)
-    net = nn.Sequential(nn.Linear(512, num_classes))
+    net = nn.Sequential(nn.Linear(512, config.num_classes))
 
     model = ResNet_Final(res_model, net)
-    model.load_state_dict(torch.load("./pth_file/model_best.pth"))
+    model.load_state_dict(torch.load(config.pth_FilePATH+config.infModelName_to_load+".pth"))
     model = model.to(device)
 
     #data 불러오기
-    submission = pd.read_csv("./inha_data/sample_submission.csv")
+    submission = pd.read_csv("../sample_submission.csv")
 
     left_test_paths = list()
     right_test_paths = list()
@@ -53,7 +53,7 @@ def infer():
 
     for left_test_path in left_test_paths:
         
-        img = Image.open("/home/jhjeong/jiho_deep/inha_dacon/inha_data/test/" + left_test_path + '.jpg').convert("RGB")# 경로 설정 유의(ex .inha/test)
+        img = Image.open(config.testDataPATH + left_test_path + '.jpg').convert("RGB")# 경로 설정 유의(ex .inha/test)
         img = data_transform(img) # 이미지 데이터 전처리
         left_test.append(img) 
     
@@ -79,7 +79,7 @@ def infer():
     #오른쪽 이미지 
     right_test = list()
     for right_test_path in right_test_paths:
-        img = Image.open("/home/jhjeong/jiho_deep/inha_dacon/inha_data/test/" + right_test_path + '.jpg').convert("RGB") # 경로 설정 유의 (ex. inha/test)
+        img = Image.open(config.testDataPATH + right_test_path + '.jpg').convert("RGB") # 경로 설정 유의 (ex. inha/test)
         img = data_transform(img)# 이미지 데이터 전처리
         right_test.append(img)
     right_test = torch.stack(right_test)
@@ -105,10 +105,10 @@ def infer():
     cosin_similarity = cos_sim(left_infer_result_list, right_infer_result_list)
     
     # 최종
-    submission = pd.read_csv("./inha_data/sample_submission.csv") 
+    submission = pd.read_csv("../sample_submission.csv") 
     submission['answer'] = cosin_similarity.tolist()
     #submission.loc['answer'] = submission['answer']
-    submission.to_csv('./inha_data/submission.csv', index=False)
+    submission.to_csv('../submission.csv', index=False)
 
 if __name__ == '__main__':
     infer()

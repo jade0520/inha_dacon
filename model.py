@@ -200,6 +200,7 @@ class ResNet(nn.Module):
 
         return x
 
+#최종적으로 Train에서 호출하는 것.
 class ResNet_Final(nn.Module):
     def __init__(self, resnet_model, linear_model):
         super(ResNet_Final, self).__init__()

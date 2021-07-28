@@ -1,0 +1,1 @@
+python train 시 inha_dacon folder안에서 해야함 (상대경로)
