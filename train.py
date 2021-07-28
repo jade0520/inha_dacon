@@ -12,6 +12,8 @@ from torch.optim.lr_scheduler import LambdaLR
 from dataset import MS1MDataset
 from model import ResNet, IRBlock, ResNet_Final
 
+import config
+
 def model_train(model, train_loader, optimizer, criterion, scheduler, total_step, device):
     model.train()
 
@@ -91,23 +93,26 @@ def model_eval(model, test_loader, criterion, device):
     return epoch_loss, epoch_acc
 
 def main():
-    seed_num = 123456
-    random.seed(seed_num)
-    torch.manual_seed(seed_num)
-    torch.cuda.manual_seed_all(seed_num)
+    
+    random.seed(config.seed_num)
+    torch.manual_seed(config.seed_num)
+    torch.cuda.manual_seed_all(config.seed_num)
 
     cuda = torch.cuda.is_available()
     device = torch.device('cuda' if cuda else 'cpu')
 
     gpu_num = torch.cuda.device_count()
     #-------------------------- Model Initialize --------------------------
-    num_classes = 42711 
+     
 
     res_model = ResNet(IRBlock, [3, 4, 6, 3], use_se=False, im_size=112)
-    net = nn.Sequential(nn.Linear(512, num_classes))
+    net = nn.Sequential(nn.Linear(512, config.num_classes))
 
     model = ResNet_Final(res_model, net)
-    model.load_state_dict(torch.load("./pth_file/model_best.pth"))
+    
+    if config.Load_Model :
+        model.load_state_dict(torch.load(config.pth_FilePATH+fileName_to_load+".pth"))
+
     model = model.to(device)
     #-------------------------- Loss & Optimizer --------------------------
     criterion = nn.CrossEntropyLoss()
@@ -129,10 +134,11 @@ def main():
     #-------------------------- Data load --------------------------
     #train dataset
     #자기 파일 path
-    train_dataset = MS1MDataset('train', "./inha_data/train.txt")
+    train_dataset = MS1MDataset(config.trainDataPATH , config.trainDataListPATH)
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=512, shuffle=True, num_workers=gpu_num * 4)
 
-    test_dataset = MS1MDataset('test', "./inha_data/test.txt")
+    #test데이터 셋을 train 폴더에서 가져오므로 위치는 trainDataPATH!!!!!
+    test_dataset = MS1MDataset(config.trainDataPATH, config.testDataListPATH)
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=512, shuffle=False, num_workers=gpu_num * 4)
 
     print(" ")
@@ -155,19 +161,30 @@ def main():
         eval_total_time = time.time() - eval_time
         print('{} Epoch {} (eval) Loss {:.4f}, ACC {:.4f}, time: {:.2f}'.format(datetime.datetime.now(), epoch+1, test_epoch_loss, test_epoch_acc, eval_total_time))
         
-        
+
+        # model 저장        
         if test_epoch_acc > pre_test_acc:
             print("best model을 저장하였습니다.")
             if gpu_num > 1:
-                torch.save(model.module.state_dict(), "./pth_file/model_best.pth")
+                torch.save(model.module.state_dict(), config.pth_FilePATH + config.trainName + ".pth")
             else:
-                torch.save(model.state_dict(), "./pth_file/model_best.pth")
+                torch.save(model.state_dict(), config.pth_FilePATH + config.trainName + ".pth")
             pre_test_acc = test_epoch_acc
 
         if gpu_num > 1:
-            torch.save(model.module.state_dict(), "./pth_file/model_" + str(epoch) + ".pth")
+            torch.save(model.module.state_dict(), config.pth_FilePATH + config.trainName +"_"+ str(epoch) + ".pth")
         else:
-            torch.save(model.state_dict(), "./pth_file/model_" + str(epoch) + ".pth")
+            torch.save(model.state_dict(), config.pth_FilePATH + config.trainName +"_"+ str(epoch) + ".pth")
+
+        
+        # log 저장
+        print("Log ...")
+        with open(config.train_log_path+"TrainLog_"+ config.trainName +".txt", "a") as ff:
+            ff.write('Epoch %d (Training) Loss %0.4f Acc %0.4f time %0.4f' % (epoch+1, epoch_loss, epoch_acc, train_total_time))
+            ff.write('\n')
+            ff.write('Epoch %d (val) Loss %0.4f Acc %0.4f time %0.4f ' % (epoch+1,test_epoch_loss, test_epoch_acc, eval_total_time))
+            ff.write('\n')
+            ff.write('\n')
         
 if __name__ == '__main__':
     main()

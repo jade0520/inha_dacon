@@ -32,24 +32,25 @@ data_transforms = {
 
 class MS1MDataset(Dataset):
     
-    def __init__(self,split, id_list_path):
+    def __init__(self,data_path, id_list_path):
 
         self.file_list = id_list_path
         self.images = []
         self.labels = []
         self.transformer = data_transforms['train']
         
-        self.data_path = id_list_path.split(split)[0]
+        self.data_path = data_path
 
         with open(self.file_list) as f:
             files = f.read().splitlines()
 
         for i, fi in enumerate(files):
+
             fi = fi.split()
 
             image = fi[1] 
             image = self.data_path + image
-            label = int(fi[0]) - 44165 # min 값
+            label = int(fi[0]) - 44165 # min 값            
          
             self.images.append(image)
             self.labels.append(label)
