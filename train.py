@@ -10,9 +10,10 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import LambdaLR
 
 from dataset import MS1MDataset
-from model import ResNet, IRBlock, ResNet_Final
+from model_VGG import vgg19, vgg19_bn
 
 import config
+import shutil
 
 def model_train(model, train_loader, optimizer, criterion, scheduler, total_step, device):
     model.train()
@@ -103,12 +104,8 @@ def main():
 
     gpu_num = torch.cuda.device_count()
     #-------------------------- Model Initialize --------------------------
-     
 
-    res_model = ResNet(IRBlock, [3, 4, 6, 3], use_se=False, im_size=112)
-    net = nn.Sequential(nn.Linear(512, config.num_classes))
-
-    model = ResNet_Final(res_model, net)
+    model = vgg19_bn()
     
     if config.Load_Model :
         model.load_state_dict(torch.load(config.pth_FilePATH+config.ModelName_to_load+".pth"))
@@ -122,11 +119,8 @@ def main():
         model = nn.DataParallel(model).to(device)
         optimizer = optim.Adam(model.module.parameters(), lr=0.001)
 
-        #1000에폭이 아니라 1000 step에서 바뀜 
-        #lr_lambda = lambda x: 1 if x < 1000 else (x / 1000) ** -0.5
-        
-        # 2에폭까지는 그대로 유지하기   (숫자를 곱하는 식인가봄..!)
-        lr_lambda = lambda x: 1 if x < 13542 else (x / 1000) ** -0.5 # 13542 = 6771 * 2
+        #step에서 바뀜 
+        lr_lambda = lambda x: 1 if x < 1000 else (x / 1000) ** -0.5
         scheduler = LambdaLR(optimizer, lr_lambda)
         
     else:
@@ -182,6 +176,8 @@ def main():
             else:
                 torch.save(model.state_dict(), config.pth_FilePATH + config.trainName + ".pth")
             pre_test_acc = test_epoch_acc
+
+        # 에폭별 저장 
 
         if gpu_num > 1:
             torch.save(model.module.state_dict(), config.pth_FilePATH + config.trainName +"_"+ str(epoch) + ".pth")

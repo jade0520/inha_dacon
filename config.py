@@ -4,11 +4,11 @@ num_classes = 42711
 
 #Setting
 Load_Model = False
-trainName = "model_VGG"
-MaxEpoch = 2
+trainName = "model_VGG_TEST2" # lr조정, MAxPooling2d ->1
+MaxEpoch = 2 # 테스트 할때는 에폭 2로만
 
 ## DataLoader
-batch_size = 256
+batch_size = 256 #512
 train_data_shuffle = True
 test_data_shuffle = False
 
@@ -29,10 +29,11 @@ train_log_path = "./log/train_log/"
 configs_path = "./log/configs/"
 
 
-# Inference
+#----------------------------------Inference------------------------------
 
 ##추론시 불러올 모델 이름
-infModelName_to_load  = "model_test"
+infModelName_to_load  = "model_VGG_TEST"
 
 ## 추론 데이터 path
 testDataPATH= "../test/"
+submissionName = "../model_VGG_TEST.csv"
