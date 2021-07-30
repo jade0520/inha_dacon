@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.utils.data
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import LambdaLR
+from torch.optim.lr_scheduler import LambdaLR, CosineAnnealingLR
 
 from dataset import MS1MDataset
 from model_VGG import vgg19, vgg19_bn
@@ -120,9 +120,12 @@ def main():
         optimizer = optim.Adam(model.module.parameters(), lr=0.001)
 
         #step에서 바뀜 
-        lr_lambda = lambda x: 1 if x < 1000 else (x / 1000) ** -0.5
-        scheduler = LambdaLR(optimizer, lr_lambda)
-        
+        #lr_lambda = lambda x: 1 if x < 1000 else (x / 1000) ** -0.5
+        #scheduler = LambdaLR(optimizer, lr_lambda)
+
+        #코사인
+        scheduler = CosineAnnealingLR(optimizer, T_max=50, eta_min=0.00001)
+
     else:
         optimizer = optim.Adam(model.parameters(), lr=0.001)
         
@@ -178,13 +181,17 @@ def main():
             pre_test_acc = test_epoch_acc
 
         # 에폭별 저장 
-
+        """
         if gpu_num > 1:
             torch.save(model.module.state_dict(), config.pth_FilePATH + config.trainName +"_"+ str(epoch) + ".pth")
         else:
             torch.save(model.state_dict(), config.pth_FilePATH + config.trainName +"_"+ str(epoch) + ".pth")
+        """
+        # 10에폭 마다 모델 저장 
+        if (epoch%10 == 0):
+            print("model every 10..")
+            torch.save(model.module.state_dict(), config.pth_FilePATH + config.trainName +"_"+ str(epoch) + ".pth")
 
-        
         # log 저장
         print("Log ...")
         with open(config.train_log_path+"TrainLog_"+ config.trainName +".txt", "a") as ff:
