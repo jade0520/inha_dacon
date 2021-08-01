@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, models, transforms
 
-from model_VGG import vgg19, vgg19_bn
+from model_Alex import alexnet
 
 import config
 
@@ -25,7 +25,7 @@ def infer():
     device = torch.device('cuda' if cuda else 'cpu')
 
     #model 정의
-    model = vgg19_bn()
+    model = alexnet()
     model.load_state_dict(torch.load(config.pth_FilePATH+config.infModelName_to_load+".pth"))
     model = model.to(device)
 
@@ -74,7 +74,7 @@ def infer():
             #print(left_infer_result.size()) # torch.Size([1000, 512])   ->  torch.Size([1000, 512, 7, 7]) --flatten--> torch.Size([1000, 25088])
             left_infer_result_list.append(left_infer_result)
 
-        left_infer_result_list = torch.stack(left_infer_result_list, dim=0).view(-1, 25088)  #512 -> 25088
+        left_infer_result_list = torch.stack(left_infer_result_list, dim=0).view(-1, 512)  #512 -> 25088
         #print("left")
         #print(left_infer_result_list.size()) # torch.Size([6000, 512]) --> torch.Size([294000, 512])
 
@@ -104,7 +104,7 @@ def infer():
 
 
 
-        right_infer_result_list = torch.stack(right_infer_result_list, dim=0).view(-1, 25088) #512 -> 25088
+        right_infer_result_list = torch.stack(right_infer_result_list, dim=0).view(-1, 512) #512 -> 25088
         #print("right")
         #print(right_infer_result_list.size()) # torch.Size([6000, 512]) --> torch.Size([294000, 512])
 

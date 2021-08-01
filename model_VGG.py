@@ -19,7 +19,6 @@ import config
     2. infer    -> 표현벡터
 
 
-    
 """
 
 # 모델 호출을 위한 class -> output, features

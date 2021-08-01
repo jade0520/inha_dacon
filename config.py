@@ -2,22 +2,22 @@
 seed_num = 123456
 num_classes = 42711
 
+#Load Model
+Load_Model = True
+ModelName_to_load = "model_Alex_TEST3"
+
 #Setting
-Load_Model = False
-trainName = "model_VGG_TEST2" # lr조정, MAxPooling2d ->1
-MaxEpoch = 2 # 테스트 할때는 에폭 2로만
+trainName = "model_Alex_TEST3" # lr 크게, 레이어 추가 ,lr scheduler   CosineAnnealingLR(optimizer, T_max=50, eta_min=0.00001), 시작 0005로
+MaxEpoch = 100 # 테스트 할때는 에폭 2로만
 
 ## DataLoader
-batch_size = 256 #512
+batch_size = 512
 train_data_shuffle = True
 test_data_shuffle = False
 
 # PATH
 ## trained models
 pth_FilePATH = "./saved_models/"
-
-### 훈련시 불러올 모델 이름
-ModelName_to_load = "model_best"
 
 ## data Path
 trainDataPATH = "../train/"
@@ -32,8 +32,8 @@ configs_path = "./log/configs/"
 #----------------------------------Inference------------------------------
 
 ##추론시 불러올 모델 이름
-infModelName_to_load  = "model_VGG_TEST"
+infModelName_to_load  = "model_Alex_TEST"
 
 ## 추론 데이터 path
 testDataPATH= "../test/"
-submissionName = "../model_VGG_TEST.csv"
+submissionName = "../"+infModelName_to_load+".csv"
