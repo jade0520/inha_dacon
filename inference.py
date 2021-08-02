@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, models, transforms
 
-from model_Alex import alexnet
+from model_RESNET import ResNet, ResNet_Final ,IRBlock
 
 import config
 
@@ -25,7 +25,12 @@ def infer():
     device = torch.device('cuda' if cuda else 'cpu')
 
     #model 정의
-    model = alexnet()
+    res_model = ResNet(IRBlock, [3, 4, 6, 3], use_se=True, im_size=112)
+    net = nn.Sequential(nn.Linear(512, config.num_classes))
+
+    model = ResNet_Final(res_model, net)
+
+
     model.load_state_dict(torch.load(config.pth_FilePATH+config.infModelName_to_load+".pth"))
     model = model.to(device)
 

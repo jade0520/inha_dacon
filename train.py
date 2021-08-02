@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import LambdaLR, CosineAnnealingLR , StepLR
 
 from dataset import MS1MDataset
-from model_Alex import alexnet
+from model_RESNET import ResNet, ResNet_Final ,IRBlock
 
 import config
 import shutil
@@ -105,7 +105,10 @@ def main():
     gpu_num = torch.cuda.device_count()
     #-------------------------- Model Initialize --------------------------
 
-    model = alexnet()
+    res_model = ResNet(IRBlock, [3, 4, 6, 3], use_se=True, im_size=112)
+    net = nn.Sequential(nn.Linear(512, config.num_classes))
+
+    model = ResNet_Final(res_model, net)
     
     if config.Load_Model :
         model.load_state_dict(torch.load(config.pth_FilePATH+config.ModelName_to_load+".pth"))
@@ -128,6 +131,7 @@ def main():
 
         #스텝
         #scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
+
 
     else:
         optimizer = optim.Adam(model.parameters(), lr=0.001)

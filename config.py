@@ -3,11 +3,11 @@ seed_num = 123456
 num_classes = 42711
 
 #Load Model
-Load_Model = True
-ModelName_to_load = "model_Alex_TEST3"
+Load_Model = False
+ModelName_to_load = "model_SEResNet_TEST"
 
 #Setting
-trainName = "model_Alex_TEST3" # lr 크게, 레이어 추가 ,lr scheduler   CosineAnnealingLR(optimizer, T_max=50, eta_min=0.00001), 시작 0005로
+trainName = "model_SEResNet_TEST" # lr 크게, 레이어 추가 ,lr scheduler   CosineAnnealingLR(optimizer, T_max=50, eta_min=0.00001), 시작 0005로
 MaxEpoch = 100 # 테스트 할때는 에폭 2로만
 
 ## DataLoader
@@ -32,7 +32,7 @@ configs_path = "./log/configs/"
 #----------------------------------Inference------------------------------
 
 ##추론시 불러올 모델 이름
-infModelName_to_load  = "model_Alex_TEST"
+infModelName_to_load  = "model_SEResNet_TEST"
 
 ## 추론 데이터 path
 testDataPATH= "../test/"
